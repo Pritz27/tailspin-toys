@@ -14,7 +14,7 @@ const gameSelection = {
     publisherName: publishers.name,
 };
 
-type GameSelectionRow = {
+interface GameSelectionRow {
     id: number;
     title: string;
     description: string;
@@ -23,7 +23,7 @@ type GameSelectionRow = {
     categoryName: string | null;
     publisherId: number | null;
     publisherName: string | null;
-};
+}
 
 function mapGame(row: GameSelectionRow): Game {
     return {
@@ -50,19 +50,32 @@ function baseGamesQuery(db: Database) {
         .leftJoin(publishers, eq(games.publisherId, publishers.id));
 }
 
-/** All games ordered by title. */
+/**
+ * Return all games ordered alphabetically by title.
+ * @param db Injectable database client used for the query.
+ * @returns The mapped games, including nullable category and publisher data.
+ */
 export async function getAllGames(db: Database): Promise<Game[]> {
     const rows = await baseGamesQuery(db).orderBy(asc(games.title));
     return rows.map(mapGame);
 }
 
-/** All game ids ordered by title. */
+/**
+ * Return all game IDs ordered alphabetically by title.
+ * @param db Injectable database client used for the query.
+ * @returns The ordered game IDs.
+ */
 export async function getAllGameIds(db: Database): Promise<number[]> {
     const rows = await db.select({ id: games.id }).from(games).orderBy(asc(games.title));
     return rows.map((row) => row.id);
 }
 
-/** A single game by id, or null when it does not exist. */
+/**
+ * Find a game by its database ID.
+ * @param db Injectable database client used for the query.
+ * @param id Database ID to look up.
+ * @returns The mapped game, or null when no game has the requested ID.
+ */
 export async function getGameById(db: Database, id: number): Promise<Game | null> {
     const row = await baseGamesQuery(db).where(eq(games.id, id)).get();
     return row ? mapGame(row) : null;
